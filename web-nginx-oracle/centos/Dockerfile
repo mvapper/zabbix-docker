@@ -33,13 +33,30 @@ RUN set -eux && \
             php-mysqlnd \
             php-json \
             php-xml \
-            supervisor && \
+            supervisor \
+			libnsl \
+			php-pear \
+			php-devel \ 
+			make && \
     rm -f /etc/nginx/conf.d/*.conf  && \
     rm -f /etc/php-fpm.d/www.conf && \
     dnf -y clean all && \
     rm -rf /var/cache/yum /var/lib/yum/yumdb/* /usr/lib/udev/hwdb.d/* && \
-    rm -rf /var/cache/dnf /etc/udev/hwdb.bin /root/.pki
-
+    rm -rf /var/cache/dnf /etc/udev/hwdb.bin /root/.pki && \
+echo $'[ol7_latest] \n\
+name=Oracle Linux $releasever Latest ($basearch) \n\
+baseurl=https://yum.oracle.com/repo/OracleLinux/OL7/latest/$basearch/ \n\
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oracle \n\
+gpgcheck=1 \n\
+enabled=1' >/etc/yum.repos.d/oracle.repo && \
+        curl https://yum.oracle.com/RPM-GPG-KEY-oracle-ol6 -o /etc/pki/rpm-gpg/RPM-GPG-KEY-oracle && \
+    dnf -y install oracle-release-el7 && \
+    dnf -y install --setopt=tsflags=nodocs --setopt=install_weak_deps=False --best \
+            oracle-instantclient19.8-basic.x86_64 \
+            oracle-instantclient19.8-devel.x86_64 && \
+	export C_INCLUDE_PATH=/usr/include/oracle/19.8/client64 && \
+    echo 'instantclient,/usr/lib/oracle/19.8/client64/lib' | pecl install oci8 && \
+    echo "extension=oci8.so" >> /etc/php.ini
 ARG MAJOR_VERSION=5.0
 ARG ZBX_VERSION=${MAJOR_VERSION}.4
 ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
@@ -86,7 +103,7 @@ RUN set -eux && \
     chown --quiet -R zabbix:root /usr/share/zabbix/include/defines.inc.php && \
     chgrp -R 0 /usr/share/zabbix/include/defines.inc.php && \
     chmod -R g=u /usr/share/zabbix/include/defines.inc.php && \
-    dnf -y history undo `dnf -q history | sed -n 3p |column -t | cut -d' ' -f1` && \
+#    dnf -y history undo `dnf -q history | sed -n 3p |column -t | cut -d' ' -f1` && \
     dnf -y erase glibc-locale-source glibc-langpack-en && \
     dnf -y clean all && \
     rm -rf /var/cache/yum /var/lib/yum/yumdb/* /usr/lib/udev/hwdb.d/* && \

@@ -29,8 +29,8 @@ ZABBIX_ETC_DIR="/etc/zabbix"
 ZBX_FRONTEND_PATH="/usr/share/zabbix"
 
 # usage: file_env VAR [DEFAULT]
-# as example: file_env 'MYSQL_PASSWORD' 'zabbix'
-#    (will allow for "$MYSQL_PASSWORD_FILE" to fill in the value of "$MYSQL_PASSWORD" from a file)
+# as example: file_env 'ORACLE_PASSWORD' 'zabbix'
+#    (will allow for "$ORACLE_PASSWORD_FILE" to fill in the value of "$ORACLE_PASSWORD" from a file)
 # unsets the VAR_FILE afterwards and just leaving VAR
 file_env() {
     local var="$1"
@@ -59,40 +59,27 @@ file_env() {
     unset "$fileVar"
 }
 
-# Check prerequisites for MySQL database
 check_variables() {
-    : ${DB_SERVER_HOST:="mysql-server"}
+    : ${DB_SERVER_HOST:="oracle-server"}
     : ${DB_SERVER_PORT:="3306"}
     USE_DB_ROOT_USER=false
     CREATE_ZBX_DB_USER=false
-    file_env MYSQL_USER
-    file_env MYSQL_PASSWORD
+    file_env ORACLE_USER
+    file_env ORACLE_PASSWORD
 
-    if [ ! -n "${MYSQL_USER}" ] && [ "${MYSQL_RANDOM_ROOT_PASSWORD}" == "true" ]; then
-        echo "**** Impossible to use MySQL server because of unknown Zabbix user and random 'root' password"
-        exit 1
-    fi
+#    if [ ! -n "${ORACLE_USER}" ] && [ ! -n "${MYSQL_ROOT_PASSWORD}" ] && [ "${MYSQL_ALLOW_EMPTY_PASSWORD}" != "true" ]; then
+#        echo "*** Impossible to use MySQL server because 'root' password is not defined and it is not empty"
+#        exit 1
+#    fi
 
-    if [ ! -n "${MYSQL_USER}" ] && [ ! -n "${MYSQL_ROOT_PASSWORD}" ] && [ "${MYSQL_ALLOW_EMPTY_PASSWORD}" != "true" ]; then
-        echo "*** Impossible to use MySQL server because 'root' password is not defined and it is not empty"
-        exit 1
-    fi
-
-    if [ "${MYSQL_ALLOW_EMPTY_PASSWORD}" == "true" ] || [ -n "${MYSQL_ROOT_PASSWORD}" ]; then
-        USE_DB_ROOT_USER=true
-        DB_SERVER_ROOT_USER="root"
-        DB_SERVER_ROOT_PASS=${MYSQL_ROOT_PASSWORD:-""}
-    fi
-
-    [ -n "${MYSQL_USER}" ] && CREATE_ZBX_DB_USER=true
+    [ -n "${ORACLE_USER}" ] && CREATE_ZBX_DB_USER=true
 
     # If root password is not specified use provided credentials
-    : ${DB_SERVER_ROOT_USER:=${MYSQL_USER}}
-    [ "${MYSQL_ALLOW_EMPTY_PASSWORD}" == "true" ] || DB_SERVER_ROOT_PASS=${DB_SERVER_ROOT_PASS:-${MYSQL_PASSWORD}}
-    DB_SERVER_ZBX_USER=${MYSQL_USER:-"zabbix"}
-    DB_SERVER_ZBX_PASS=${MYSQL_PASSWORD:-"zabbix"}
-
-    DB_SERVER_DBNAME=${MYSQL_DATABASE:-"zabbix"}
+    : ${DB_SERVER_ROOT_USER:=${ORACLE_USER}}
+#    [ "${MYSQL_ALLOW_EMPTY_PASSWORD}" == "true" ] || DB_SERVER_ROOT_PASS=${DB_SERVER_ROOT_PASS:-${ORACLE_PASSWORD}}
+    DB_SERVER_ZBX_USER=${ORACLE_USER:-"zabbix"}
+    DB_SERVER_ZBX_PASS=${ORACLE_PASSWORD:-"zabbix"}
+    DB_SERVER_DBNAME=${ORACLE_DATABASE:-"zabbix"}
 }
 
 db_tls_params() {
@@ -194,7 +181,7 @@ prepare_zbx_web_config() {
     export ZBX_MAXINPUTTIME=${ZBX_MAXINPUTTIME:-"300"}
     export PHP_TZ=${PHP_TZ:-"Europe/Riga"}
 
-    export DB_SERVER_TYPE="MYSQL"
+    export DB_SERVER_TYPE="ORACLE"
     export DB_SERVER_HOST=${DB_SERVER_HOST}
     export DB_SERVER_PORT=${DB_SERVER_PORT}
     export DB_SERVER_DBNAME=${DB_SERVER_DBNAME}
@@ -250,10 +237,10 @@ prepare_zbx_web_config() {
 
 #################################################
 
-echo "** Deploying Zabbix web-interface (Nginx) with MySQL database"
+echo "** Deploying Zabbix web-interface (Nginx) with Oracle database"
 
 check_variables
-check_db_connect
+#check_db_connect
 prepare_web_server
 prepare_zbx_web_config
 
