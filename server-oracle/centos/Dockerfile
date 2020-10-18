@@ -1,10 +1,10 @@
 FROM centos:centos8
 
-LABEL org.opencontainers.image.title="Zabbix server (MySQL)" \
-      org.opencontainers.image.authors="Alexey Pustovalov <alexey.pustovalov@zabbix.com>" \
+LABEL org.opencontainers.image.title="Zabbix server (Oracle)" \
+      org.opencontainers.image.authors="Alexey Pustovalov <alexey.pustovalov@zabbix.com>, Mati Vapper" \
       org.opencontainers.image.vendor="Zabbix LLC" \
       org.opencontainers.image.url="https://zabbix.com/" \
-      org.opencontainers.image.description="Zabbix server with MySQL database support" \
+      org.opencontainers.image.description="Zabbix server with Oracle database support" \
       org.opencontainers.image.licenses="GPL v2.0"
 
 STOPSIGNAL SIGTERM
@@ -31,7 +31,7 @@ RUN set -eux && \
     mkdir -p /var/lib/zabbix/ssl/ssl_ca && \
     mkdir -p /usr/lib/zabbix/alertscripts && \
     mkdir -p /usr/lib/zabbix/externalscripts && \
-    mkdir -p /usr/share/doc/zabbix-server-mysql && \
+    mkdir -p /usr/share/doc/zabbix-server-oracle && \
 	dnf --quiet makecache && \
     dnf -y install epel-release && \
     dnf -y install --setopt=tsflags=nodocs --setopt=install_weak_deps=False --best \
@@ -43,8 +43,8 @@ RUN set -eux && \
             libevent \
             libxml2 \
             libssh \
-            mysql \
-            mysql-libs \
+#            mysql \
+#            mysql-libs \
             net-snmp-libs \
             OpenIPMI-libs \
             openldap \
@@ -94,7 +94,7 @@ RUN set -eux && \
             libssh-devel \
             libxml2-devel \
             make \
-            mysql-devel \
+#            mysql-devel \
             net-snmp-devel \
             OpenIPMI-devel \
             openldap-devel \
@@ -111,12 +111,14 @@ enabled=1' >/etc/yum.repos.d/oracle.repo && \
     dnf -y install --setopt=tsflags=nodocs --setopt=install_weak_deps=False --best \
             oracle-instantclient19.8-basic.x86_64 \
             oracle-instantclient19.8-devel.x86_64 \
+			oracle-instantclient19.8-sqlplus.x86_64 \
             libnsl && \
     sed -i 's/enabled=0/enabled=1/g' /etc/yum.repos.d/*oracle* && \
     sed -i 's/enabled=0/enabled=1/g' /etc/yum.repos.d/*ol7* && \
     cd /tmp/ && \
     git clone ${ZBX_SOURCES} --branch ${ZBX_VERSION} --depth 1 --single-branch zabbix-${ZBX_VERSION} && \
     cd /tmp/zabbix-${ZBX_VERSION} && \
+	sed -i "s/nvarchar/varchar/g" src/libs/zbxdbupgrade/dbupgrade.c && \
     zabbix_revision=`git rev-parse --short HEAD` && \
     sed -i "s/{ZABBIX_REVISION}/$zabbix_revision/g" include/version.h && \
     ./bootstrap.sh && \
@@ -150,11 +152,12 @@ enabled=1' >/etc/yum.repos.d/oracle.repo && \
     cp src/zabbix_get/zabbix_get /usr/bin/zabbix_get && \
     cp src/zabbix_sender/zabbix_sender /usr/bin/zabbix_sender && \
     cp conf/zabbix_server.conf /etc/zabbix/zabbix_server.conf && \
-    cat database/mysql/schema.sql > database/mysql/create.sql && \
-    cat database/mysql/images.sql >> database/mysql/create.sql && \
-    cat database/mysql/data.sql >> database/mysql/create.sql && \
-    gzip database/mysql/create.sql && \
-    cp database/mysql/create.sql.gz /usr/share/doc/zabbix-server-mysql/ && \
+	sed -i "s/nvarchar/varchar/g" database/oracle/*.sql && \
+    cat database/oracle/schema.sql > database/oracle/create.sql && \
+    cat database/oracle/images.sql >> database/oracle/create.sql && \
+    cat database/oracle/data.sql >> database/oracle/create.sql && \
+    gzip database/oracle/create.sql && \
+    cp database/oracle/create.sql.gz /usr/share/doc/zabbix-server-oracle/ && \
     cd /tmp/ && \
     rm -rf /tmp/zabbix-${ZBX_VERSION}/ && \
     chown --quiet -R zabbix:root /etc/zabbix/ /var/lib/zabbix/ && \
