@@ -447,10 +447,10 @@ prepare_server() {
     echo "** Preparing Zabbix server"
 
     check_variables_mysql
-    check_db_connect_mysql
-    create_db_user_mysql
-    create_db_database_mysql
-    create_db_schema_mysql
+#    check_db_connect_mysql
+#    create_db_user_mysql
+#    create_db_database_mysql
+#    create_db_schema_mysql
 
     update_zbx_config
 }
