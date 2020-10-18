@@ -1,0 +1,32 @@
+version: '3.0'
+services:
+  zabbix:
+    image: zbxsrvora:2.0
+    container_name: zabbix
+    environment:
+      DB_SERVER_HOST: 192.168.10.161
+      MYSQL_USER: zabbix
+      MYSQL_PASSWORD: zabbix
+      MYSQL_DATABASE: XE
+      DB_SERVER_PORT: 1521
+  web:
+    image: zbxwebora:1.0
+    container_name: web
+    environment:
+      DB_SERVER_HOST: 192.168.10.161
+      ORACLE_USER: zabbix
+      ORACLE_PASSWORD: zabbix
+      ORACLE_DATABASE: XE
+      DB_SERVER_PORT: 1521
+      ZBX_SERVER_HOST: zabbix
+    ports:
+      - 8000:8080
+      - 4433:8443
+  zabbix-agent:
+    container_name: agent2
+    image: zabbix/zabbix-agent2
+    ports:
+      - "10050:10050"
+    environment:
+      ZBX_SERVER_HOST: zabbix
+
