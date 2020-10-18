@@ -32,7 +32,7 @@ RUN set -eux && \
     mkdir -p /usr/lib/zabbix/alertscripts && \
     mkdir -p /usr/lib/zabbix/externalscripts && \
     mkdir -p /usr/share/doc/zabbix-server-mysql && \
-    dnf --quiet makecache && \
+	dnf --quiet makecache && \
     dnf -y install epel-release && \
     dnf -y install --setopt=tsflags=nodocs --setopt=install_weak_deps=False --best \
             fping \
@@ -100,6 +100,20 @@ RUN set -eux && \
             openldap-devel \
             git \
             unixODBC-devel && \
+echo $'[ol7_latest] \n\
+name=Oracle Linux $releasever Latest ($basearch) \n\
+baseurl=https://yum.oracle.com/repo/OracleLinux/OL7/latest/$basearch/ \n\
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oracle \n\
+gpgcheck=1 \n\
+enabled=1' >/etc/yum.repos.d/oracle.repo && \
+        curl https://yum.oracle.com/RPM-GPG-KEY-oracle-ol6 -o /etc/pki/rpm-gpg/RPM-GPG-KEY-oracle && \
+    dnf -y install oracle-release-el7 && \
+    dnf -y install --setopt=tsflags=nodocs --setopt=install_weak_deps=False --best \
+            oracle-instantclient19.8-basic.x86_64 \
+            oracle-instantclient19.8-devel.x86_64 \
+            libnsl && \
+    sed -i 's/enabled=0/enabled=1/g' /etc/yum.repos.d/*oracle* && \
+    sed -i 's/enabled=0/enabled=1/g' /etc/yum.repos.d/*ol7* && \
     cd /tmp/ && \
     git clone ${ZBX_SOURCES} --branch ${ZBX_VERSION} --depth 1 --single-branch zabbix-${ZBX_VERSION} && \
     cd /tmp/zabbix-${ZBX_VERSION} && \
@@ -107,6 +121,8 @@ RUN set -eux && \
     sed -i "s/{ZABBIX_REVISION}/$zabbix_revision/g" include/version.h && \
     ./bootstrap.sh && \
     export CFLAGS="-fPIC -pie -Wl,-z,relro -Wl,-z,now" && \
+    export INCLUDE_DIR=/usr/include/oracle/19.8/client64 && \
+    export LD_LIBRARY_PATH=/usr/lib/oracle/19.8/client64/lib  && \
     ./configure \
             --datadir=/usr/lib \
             --libdir=/usr/lib/zabbix \
@@ -114,7 +130,10 @@ RUN set -eux && \
             --sysconfdir=/etc/zabbix \
             --enable-agent \
             --enable-server \
-            --with-mysql \
+#            --with-mysql \
+            --with-oracle=yes \
+            --with-oracle-lib=$LD_LIBRARY_PATH \
+            --with-oracle-include=$INCLUDE_DIR \
             --with-ldap \
             --with-libcurl \
             --with-libxml2 \
