@@ -14,6 +14,8 @@ fi
 ZABBIX_USER_HOME_DIR="/var/lib/zabbix"
 # Configuration files directory
 ZABBIX_ETC_DIR="/etc/zabbix"
+LD_LIBRARY_PATH="/usr/lib/oracle/19.8/client64/lib"
+ORACLE_HOME="/usr/lib/oracle/19.8/client64"
 
 # usage: file_env VAR [DEFAULT]
 # as example: file_env 'MYSQL_PASSWORD' 'zabbix'
