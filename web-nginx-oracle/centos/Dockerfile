@@ -1,10 +1,10 @@
 FROM centos:centos8
 
-LABEL org.opencontainers.image.title="Zabbix web-interface (Nginx, MySQL)" \
-      org.opencontainers.image.authors="Alexey Pustovalov <alexey.pustovalov@zabbix.com>" \
+LABEL org.opencontainers.image.title="Zabbix web-interface (Nginx, Oracle)" \
+      org.opencontainers.image.authors="Alexey Pustovalov <alexey.pustovalov@zabbix.com>, Mati Vapper" \
       org.opencontainers.image.vendor="Zabbix LLC" \
       org.opencontainers.image.url="https://zabbix.com/" \
-      org.opencontainers.image.description="Zabbix web-interface based on Nginx web server with MySQL database support" \
+      org.opencontainers.image.description="Zabbix web-interface based on Nginx web server with Oracle database support" \
       org.opencontainers.image.licenses="GPL v2.0"
 
 STOPSIGNAL SIGTERM
