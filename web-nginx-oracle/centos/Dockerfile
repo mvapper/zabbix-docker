@@ -109,12 +109,16 @@ RUN set -eux && \
     rm -rf /var/cache/yum /var/lib/yum/yumdb/* /usr/lib/udev/hwdb.d/* && \
     rm -rf /var/cache/dnf /etc/udev/hwdb.bin /root/.pki
 
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.7.3/wait /wait
+RUN chmod +x /wait
+
 EXPOSE 8080/TCP 8443/TCP
 
 WORKDIR /usr/share/zabbix
 
 COPY ["docker-entrypoint.sh", "/usr/bin/"]
 
+	
 USER 1997
 
 ENTRYPOINT ["docker-entrypoint.sh"]

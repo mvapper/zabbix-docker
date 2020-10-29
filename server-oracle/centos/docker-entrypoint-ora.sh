@@ -139,7 +139,7 @@ update_config_multiple_var() {
 # Check prerequisites for ORACLE database
 check_variables_mysql() {
     : ${DB_SERVER_HOST:="oracle-server"}
-    : ${DB_SERVER_PORT:="3306"}
+    : ${DB_SERVER_PORT:="1521"}
     USE_DB_ROOT_USER=false
     CREATE_ZBX_DB_USER=false
     file_env ORACLE_USER
@@ -176,51 +176,36 @@ db_tls_params() {
     echo $result
 }
 
-check_db_connect_mysql() {
+check_db_oracle() {
     echo "********************"
     echo "* DB_SERVER_HOST: ${DB_SERVER_HOST}"
     echo "* DB_SERVER_PORT: ${DB_SERVER_PORT}"
     echo "* DB_SERVER_DBNAME: ${DB_SERVER_DBNAME}"
-    if [ "${DEBUG_MODE}" == "true" ]; then
-        if [ "${USE_DB_ROOT_USER}" == "true" ]; then
-            echo "* DB_SERVER_ROOT_USER: ${DB_SERVER_ROOT_USER}"
-            echo "* DB_SERVER_ROOT_PASS: ${DB_SERVER_ROOT_PASS}"
-        fi
-        echo "* DB_SERVER_ZBX_USER: ${DB_SERVER_ZBX_USER}"
-        echo "* DB_SERVER_ZBX_PASS: ${DB_SERVER_ZBX_PASS}"
-    fi
-    echo "********************"
 
     WAIT_TIMEOUT=5
 
-    ssl_opts="$(db_tls_params)"
-
-    export ORACLE_PWD="${DB_SERVER_ROOT_PASS}"
-
-    while [ ! "$(mysqladmin ping -h ${DB_SERVER_HOST} -P ${DB_SERVER_PORT} -u ${DB_SERVER_ROOT_USER} \
-                --silent --connect_timeout=10 $ssl_opts)" ]; do
-        echo "**** MySQL server is not available. Waiting $WAIT_TIMEOUT seconds..."
+    while [ "$(sqlplus -s zabbix/zabbix@//192.168.10.161/XE <<EOF
+           set heading off feedback off verify off
+           select username, osuser, module from v\$session where module like '%zabbix_server%' and rownum=1;
+           exit
+EOF
+)" ]; do
+        echo "**** Another zabbix instance already connected. Waiting $WAIT_TIMEOUT seconds..."
         sleep $WAIT_TIMEOUT
     done
 
-    unset MYSQL_PWD
 }
 
-mysql_query() {
-    query=$1
-    local result=""
+#mysql_query() {
+#    query=$1
+#    local result=""
+#    ssl_opts="$(db_tls_params)"
 
-    ssl_opts="$(db_tls_params)"
-
-    export MYSQL_PWD="${DB_SERVER_ROOT_PASS}"
-
-    result=$(mysql --silent --skip-column-names -h ${DB_SERVER_HOST} -P ${DB_SERVER_PORT} \
-             -u ${DB_SERVER_ROOT_USER} -e "$query" $ssl_opts)
-
-    unset MYSQL_PWD
-
-    echo $result
-}
+#    result=$(mysql --silent --skip-column-names -h ${DB_SERVER_HOST} -P ${DB_SERVER_PORT} \
+#             -u ${DB_SERVER_USER} -e "$query" $ssl_opts)
+#
+#    echo $result
+#}
 
 # will be created for oracle
 #create_db_user_mysql() {
@@ -429,7 +414,7 @@ prepare_server() {
     echo "** Preparing Zabbix server"
 
     check_variables_mysql
-#    check_db_connect_mysql
+    check_db_oracle
 #    create_db_user_mysql
 #    create_db_database_mysql
 #    create_db_schema_mysql
@@ -450,3 +435,5 @@ fi
 exec "$@"
 
 #################################################
+
+

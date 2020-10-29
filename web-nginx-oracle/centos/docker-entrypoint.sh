@@ -18,7 +18,7 @@ ZBX_SERVER_HOST=${ZBX_SERVER_HOST:-"zabbix-server"}
 ZBX_SERVER_PORT=${ZBX_SERVER_PORT:-"10051"}
 
 # Default timezone for web interface
-PHP_TZ=${PHP_TZ:-"Europe/Riga"}
+PHP_TZ=${PHP_TZ:-"Europe/Amsterdam"}
 
 # Default directories
 # User 'zabbix' home directory
@@ -61,7 +61,7 @@ file_env() {
 
 check_variables() {
     : ${DB_SERVER_HOST:="oracle-server"}
-    : ${DB_SERVER_PORT:="3306"}
+    : ${DB_SERVER_PORT:="1521"}
     USE_DB_ROOT_USER=false
     CREATE_ZBX_DB_USER=false
     file_env ORACLE_USER

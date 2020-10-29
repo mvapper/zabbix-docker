@@ -99,7 +99,8 @@ RUN set -eux && \
             OpenIPMI-devel \
             openldap-devel \
             git \
-            unixODBC-devel && \
+            unixODBC-devel \
+			python3 && \
 echo $'[ol7_latest] \n\
 name=Oracle Linux $releasever Latest ($basearch) \n\
 baseurl=https://yum.oracle.com/repo/OracleLinux/OL7/latest/$basearch/ \n\
@@ -113,8 +114,9 @@ enabled=1' >/etc/yum.repos.d/oracle.repo && \
             oracle-instantclient19.8-devel.x86_64 \
 			oracle-instantclient19.8-sqlplus.x86_64 \
             libnsl && \
-    sed -i 's/enabled=0/enabled=1/g' /etc/yum.repos.d/*oracle* && \
-    sed -i 's/enabled=0/enabled=1/g' /etc/yum.repos.d/*ol7* && \
+    sed -i 's/enabled=1/enabled=0/g' /etc/yum.repos.d/*oracle* && \
+    sed -i 's/enabled=1/enabled=0/g' /etc/yum.repos.d/*ol7* && \
+	pip3 install py-zabbix requests pyyaml anymarkup && \
     cd /tmp/ && \
     git clone ${ZBX_SOURCES} --branch ${ZBX_VERSION} --depth 1 --single-branch zabbix-${ZBX_VERSION} && \
     cd /tmp/zabbix-${ZBX_VERSION} && \
@@ -176,8 +178,9 @@ WORKDIR /var/lib/zabbix
 VOLUME ["/var/lib/zabbix/snmptraps", "/var/lib/zabbix/export"]
 
 COPY ["docker-entrypoint.sh", "/usr/bin/"]
+COPY ["docker-entrypoint-ora.sh", "/usr/bin/"]
 
-ENTRYPOINT ["/sbin/tini", "--", "/usr/bin/docker-entrypoint.sh"]
+ENTRYPOINT ["/sbin/tini", "--", "/usr/bin/docker-entrypoint-ora.sh"]
 
 USER 1997
 
